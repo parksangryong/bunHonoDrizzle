@@ -1,10 +1,18 @@
 To install dependencies:
 
-DB migration
+DB migration:
 
 ```sh
 bunx drizzle-kit push
 ```
+
+DB에 데이터 가져와서 스키마 생성:
+
+```sh
+bunx drizzle-kit introspect
+```
+
+To install:
 
 ```sh
 bun install
