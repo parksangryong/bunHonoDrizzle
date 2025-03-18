@@ -4,6 +4,7 @@
     "dev": "bun run --hot src/index.ts"
   },
   "dependencies": {
+    "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.40.0",
     "hono": "^4.7.4",
