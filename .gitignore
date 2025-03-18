@@ -6,3 +6,6 @@ node_modules/
 
 # migration
 drizzle/
+
+# schema
+src/db/schema

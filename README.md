@@ -1,6 +1,6 @@
 To install dependencies:
 
-DB migration:
+DB 생성 후 스키마 생성:
 
 ```sh
 bunx drizzle-kit push
