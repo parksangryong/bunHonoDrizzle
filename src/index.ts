@@ -7,7 +7,7 @@ import { timing } from "hono/timing";
 import { connectionResult } from "./db";
 
 // middleware
-import { errorHandler } from "./middleware/error";
+import { errorHandler } from "./middleware/error.middleware";
 import { authenticateToken } from "./middleware/auth.middleware";
 
 //routes

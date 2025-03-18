@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { generateTokens } from "../jwt/jwt";
+import { generateTokens } from "../utils/jwt";
 
 const app = new Hono();
 

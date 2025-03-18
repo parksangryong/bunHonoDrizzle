@@ -3,7 +3,7 @@ import {
   verifyAccessToken,
   verifyRefreshToken,
   generateTokens,
-} from "../jwt/jwt";
+} from "../utils/jwt";
 
 export const authenticateToken = async (c: Context, next: Next) => {
   const accessToken = c.req.header("Authorization")?.split(" ")[1];
