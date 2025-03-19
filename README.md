@@ -1,3 +1,5 @@
+Bun + Hono + Drizzle + MySQL
+
 To install dependencies:
 
 DB 생성 후 스키마 생성:
