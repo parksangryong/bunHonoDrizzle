@@ -9,10 +9,10 @@ import { connectionResult } from "./db";
 // middleware
 import { errorHandler } from "./middleware/error.middleware";
 import { authenticateToken } from "./middleware/auth.middleware";
+import { rateLimit } from "./middleware/rateLimit.middleware";
 
 //routes
 import users from "./routes/users";
-import employees from "./routes/employees";
 import auth from "./routes/auth";
 import uploads from "./routes/uploads";
 const app = new Hono();
@@ -21,6 +21,7 @@ const app = new Hono();
 app.use("*", cors()); // CORS 활성화
 app.use("*", logger()); // morgan과 유사한 로깅
 app.use("*", timing()); // response time 측정
+app.use("*", rateLimit()); // 요청 제한
 
 connectionResult();
 errorHandler(app);
@@ -30,12 +31,13 @@ app.route("/auth", auth);
 
 // 그 다음 인증 미들웨어 적용 (로그인 이외의 모든 라우트에 대해)
 app.use("/users/*", authenticateToken);
-app.use("/employees/*", authenticateToken);
 app.use("/uploads/*", authenticateToken);
 
 // 보호된 라우트들
 app.route("/users", users);
-app.route("/employees", employees);
 app.route("/uploads", uploads);
 
-export default app;
+export default {
+  port: process.env.PORT,
+  fetch: app.fetch,
+};
