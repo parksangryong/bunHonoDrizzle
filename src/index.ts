@@ -37,7 +37,9 @@ app.use("/uploads/*", authenticateToken);
 app.route("/users", users);
 app.route("/uploads", uploads);
 
+const PORT = process.env.PORT || 3000;
+
 export default {
-  port: process.env.PORT,
+  port: Number(PORT),
   fetch: app.fetch,
 };
