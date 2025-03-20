@@ -31,7 +31,7 @@ errorHandler(app);
 app.route("/auth", auth);
 
 // 그 다음 인증 미들웨어 적용 (로그인 이외의 모든 라우트에 대해)
-app.use("/users/*");
+app.use("/users/*", authenticateToken);
 app.use("/uploads/*", authenticateToken);
 
 // 보호된 라우트들
