@@ -21,14 +21,8 @@ app.get("/", async (c) => {
   });
 });
 
-app.post("/", async (c) => {
-  const result = await userSchema.safeParseAsync(await c.req.json());
-
-  if (!result.success) {
-    throw result.error;
-  }
-
-  const { name, age, email } = result.data;
+app.post("/", zValidator("json", userSchema), async (c) => {
+  const { name, age, email } = c.req.valid("json");
   await createUser(name, age, email);
 
   return c.json({
@@ -36,4 +30,5 @@ app.post("/", async (c) => {
     message: "유저 생성 성공",
   });
 });
+
 export default app;
