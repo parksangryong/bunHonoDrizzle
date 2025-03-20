@@ -1,7 +1,18 @@
 {
-  "name": "test-app",
+  "name": "bun-hono-drizzle-template",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun run --hot src/index.ts",
+    "build": "bun build src/index.ts --outdir dist",
+    "start": "bun run dist/index.js",
+    "stop": "pm2 stop nodeTemplate",
+    "restart": "pm2 restart nodeTemplate",
+    "delete": "pm2 delete nodeTemplate",
+    "list": "pm2 list",
+    "logs": "pm2 logs nodeTemplate",
+    "deploy": "bun run build && bun run start",
+    "db:generate": "bunx drizzle-kit generate:mysql",
+    "db:push": "bunx drizzle-kit push:mysql",
+    "db:studio": "bunx drizzle-kit studio"
   },
   "dependencies": {
     "dayjs": "^1.11.13",
@@ -9,7 +20,8 @@
     "drizzle-orm": "^0.40.0",
     "hono": "^4.7.4",
     "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.13.0"
+    "mysql2": "^3.13.0",
+    "pm2": "^6.0.5"
   },
   "devDependencies": {
     "@types/bun": "latest",

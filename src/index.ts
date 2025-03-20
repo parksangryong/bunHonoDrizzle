@@ -15,6 +15,7 @@ import { rateLimit } from "./middleware/rateLimit.middleware";
 import users from "./routes/users";
 import auth from "./routes/auth";
 import uploads from "./routes/uploads";
+
 const app = new Hono();
 
 // 미들웨어 설정
