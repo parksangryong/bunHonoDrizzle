@@ -9,3 +9,6 @@ drizzle/
 
 # schema
 src/db/schema
+
+# dist
+dist/
