@@ -5,11 +5,11 @@ const ACCESS_TOKEN_SECRET =
 const REFRESH_TOKEN_SECRET =
   process.env.REFRESH_TOKEN_SECRET || "your-refresh-secret";
 
-export const generateTokens = (username: string, password: string) => {
-  const accessToken = sign({ username, password }, ACCESS_TOKEN_SECRET, {
+export const generateTokens = (username: string, userId: number) => {
+  const accessToken = sign({ username, userId }, ACCESS_TOKEN_SECRET, {
     expiresIn: "1h",
   });
-  const refreshToken = sign({ username, password }, REFRESH_TOKEN_SECRET, {
+  const refreshToken = sign({ username, userId }, REFRESH_TOKEN_SECRET, {
     expiresIn: "7d",
   });
 

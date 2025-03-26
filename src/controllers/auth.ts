@@ -16,7 +16,7 @@ export const register = async (
     .insert(users)
     .values({ password, name, email, age });
 
-  const generatedTokens = generateTokens(name, insertId.toString());
+  const generatedTokens = generateTokens(name, insertId);
 
   await db
     .insert(tokens)
@@ -49,7 +49,7 @@ export const login = async (email: string, password: string) => {
     });
   }
 
-  const generatedTokens = generateTokens(user.name, user.id.toString());
+  const generatedTokens = generateTokens(user.name, user.id);
 
   await db
     .insert(tokens)
@@ -114,10 +114,7 @@ export const refreshTokens = async (refreshToken: string, c: Context) => {
     }
 
     // 액세스 토큰만 새로 생성
-    const newAccessToken = generateTokens(
-      username,
-      userId.toString()
-    ).accessToken;
+    const newAccessToken = generateTokens(username, userId).accessToken;
 
     console.log("newAccessToken", newAccessToken);
 
