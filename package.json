@@ -10,7 +10,7 @@
     "list": "pm2 list",
     "logs": "pm2 logs bunTemplate",
     "deploy": "bun run build && bun run start",
-    "db:introspect": "bunx drizzle-kit introspect",
+    "db:pull": "bunx drizzle-kit introspect",
     "db:push": "bunx drizzle-kit push",
     "db:studio": "bunx drizzle-kit studio"
   },

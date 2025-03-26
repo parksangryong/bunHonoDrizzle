@@ -48,12 +48,12 @@ bun run stop // pm2 중지
 bun run deploy // 서버 배포
 ```
 
-```sh # 스키마 생성
-bun run db:generate // 스키마 생성
+```sh # DB에서 스키마 가져오기
+bun run db:pull // DB에서 스키마 가져오기
 ```
 
-```sh # 스키마 저장
-bun run db:push // 스키마 저장
+```sh # DB에 스키마 저장
+bun run db:push // DB에 스키마 저장
 ```
 
 ```sh # 스키마 확인
