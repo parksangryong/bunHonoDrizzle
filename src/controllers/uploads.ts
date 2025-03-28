@@ -14,6 +14,19 @@ export const uploadFile = async (c: Context) => {
     const file = body.get("file") as File;
     const userId = body.get("userId") as string;
 
+    // 허용된 이미지 타입 정의
+    const ALLOWED_IMAGE_TYPES = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "image/jpg",
+      "image/heic",
+      "image/heif",
+      "image/bmp",
+      "image/ico",
+    ];
+
     // 파일 존재 여부 상세 체크
     if (!file || !(file instanceof File)) {
       throw new HTTPException(400, {
@@ -21,6 +34,13 @@ export const uploadFile = async (c: Context) => {
       });
     }
 
+    // 이미지 타입 검사
+    if (ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      throw new HTTPException(400, {
+        message:
+          "지원하지 않는 파일 형식입니다. JPG, PNG, GIF, WEBP 파일만 업로드 가능합니다.",
+      });
+    }
     // 파일 크기 제한 (예: 10MB)
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
     if (file.size > MAX_FILE_SIZE) {
@@ -67,6 +87,9 @@ export const uploadFile = async (c: Context) => {
     await db.insert(uploads).values({
       userId: parseInt(userId),
       fileUrl: uploadPath,
+      fileName: sanitizedFileName,
+      fileType: file.type,
+      fileSize: file.size,
     });
 
     return c.json({

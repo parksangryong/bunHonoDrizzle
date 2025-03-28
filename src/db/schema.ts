@@ -35,6 +35,9 @@ export const uploads = mysqlTable("uploads", {
   userId: int()
     .notNull()
     .references(() => users.id),
+  fileName: varchar({ length: 255 }).notNull(),
+  fileType: varchar({ length: 255 }).notNull(),
+  fileSize: int().notNull(),
   fileUrl: varchar({ length: 255 }).notNull(),
   createdAt: timestamp().defaultNow(),
   updatedAt: timestamp().defaultNow(),
