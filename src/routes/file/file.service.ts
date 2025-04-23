@@ -67,12 +67,16 @@ export const uploadFile: Handler = async (c: Context) => {
     }
 
     // 파일명 보안 처리
-    const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "");
+    const sanitizedFileName = file.name.replace(/[^가-힣a-zA-Z0-9._-]/g, "");
+    const timestamp = Date.now();
 
     // 파일 저장 디렉토리 생성 (절대 경로 사용)
     const uploadsDir = path.join(process.cwd(), UPLOADS_DIR);
     await fs.mkdir(uploadsDir, { recursive: true });
-    const uploadPath = path.join(uploadsDir, sanitizedFileName);
+    const uploadPath = path.join(
+      uploadsDir,
+      `${timestamp}-${sanitizedFileName}`
+    );
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
