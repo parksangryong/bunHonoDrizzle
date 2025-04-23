@@ -1,13 +1,17 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+import { Errors } from "../constants/error";
 
 // 먼저 커스텀 에러 클래스를 생성합니다
-export class AuthException extends HTTPException {
-  constructor(status: number, message: string, code: string) {
-    super(status as any, { message });
-    this.code = code;
+export class AuthException extends Error {
+  constructor(
+    public status: number,
+    public message: string,
+    public code: string
+  ) {
+    super(message);
+    this.name = "AuthException";
   }
-  code: string;
 }
 
 export const errorHandler = (app: Hono) => {
@@ -21,22 +25,42 @@ export const errorHandler = (app: Hono) => {
           code: err.code,
           message: err.message,
         },
-        err.status
+        err.status as any
       );
     }
+
     if (err instanceof HTTPException) {
       return c.json(
         {
-          code: "AUTH-001",
+          code: Errors.SERVER.INTERNAL_ERROR.code,
           message: err.message,
         },
         err.status
       );
     }
+
+    // 일반 Error 처리
+    if (err instanceof Error) {
+      const errorCode = err.message;
+      const error = Object.values(Errors)
+        .flatMap((category) => Object.values(category))
+        .find((e) => e.code === errorCode);
+
+      if (error) {
+        return c.json(
+          {
+            code: error.code,
+            message: error.message,
+          },
+          400
+        );
+      }
+    }
+
     return c.json(
       {
-        code: "SERVER-001",
-        message: "서버 에러가 발생했습니다",
+        code: Errors.SERVER.INTERNAL_ERROR.code,
+        message: Errors.SERVER.INTERNAL_ERROR.message,
       },
       500
     );
@@ -46,7 +70,8 @@ export const errorHandler = (app: Hono) => {
   app.notFound((c) => {
     return c.json(
       {
-        message: "요청하신 경로를 찾을 수 없습니다.",
+        code: "NOT_FOUND",
+        message: "요청하신 경로를 찾을 수 없습니다",
       },
       404
     );

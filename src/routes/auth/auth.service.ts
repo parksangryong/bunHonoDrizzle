@@ -1,11 +1,21 @@
 import { db } from "../../db";
 import { users, tokens } from "../../db/schema";
-import { eq, and } from "drizzle-orm";
-import { HTTPException } from "hono/http-exception";
+import { eq } from "drizzle-orm";
+
+// utils
 import { generateTokens } from "../../utils/jwt";
+import {
+  comparePassword,
+  hashPassword,
+  saveTokens,
+} from "../../utils/auth.util";
 import { jwtDecode } from "jwt-decode";
+
+// schema
 import type { LoginRequest, RegisterRequest } from "./auth.schema";
-import { AuthException } from "../../middleware/error.middleware";
+
+// constants
+import { Errors } from "../../constants/error";
 
 interface TokenPair {
   accessToken: string;
@@ -18,28 +28,22 @@ export const register = async ({
   email,
   age,
 }: RegisterRequest): Promise<TokenPair> => {
+  const existingUser = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email));
+
+  if (existingUser.length > 0) {
+    throw new Error(Errors.AUTH.USER_EXISTS.code);
+  }
+
+  const hashedPassword = await hashPassword(password);
+
   const [{ insertId }] = await db
     .insert(users)
-    .values({ password, name, email, age });
+    .values({ password: hashedPassword, name, email, age });
 
-  const generatedTokens = generateTokens(name, insertId);
-
-  await db
-    .insert(tokens)
-    .values({
-      userId: insertId,
-      accessToken: generatedTokens.accessToken,
-      refreshToken: generatedTokens.refreshToken,
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    })
-    .onDuplicateKeyUpdate({
-      set: {
-        accessToken: generatedTokens.accessToken,
-        refreshToken: generatedTokens.refreshToken,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      },
-    });
-
+  const generatedTokens = saveTokens(insertId, name);
   return generatedTokens;
 };
 
@@ -47,43 +51,29 @@ export const login = async ({
   email,
   password,
 }: LoginRequest): Promise<TokenPair> => {
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(and(eq(users.email, email), eq(users.password, password)));
-
+  const [user] = await db.select().from(users).where(eq(users.email, email));
   if (!user) {
-    throw new HTTPException(400, {
-      message: "이메일 또는 비밀번호가 일치하지 않습니다",
-    });
+    throw new Error(Errors.AUTH.USER_NOT_FOUND.code);
   }
 
-  const generatedTokens = generateTokens(user.name, user.id);
+  const isPasswordValid = await comparePassword(password, user.password);
+  if (!isPasswordValid) {
+    throw new Error(Errors.AUTH.PASSWORD_NOT_MATCH.code);
+  }
 
-  await db
-    .insert(tokens)
-    .values({
-      userId: user.id,
-      accessToken: generatedTokens.accessToken,
-      refreshToken: generatedTokens.refreshToken,
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    })
-    .onDuplicateKeyUpdate({
-      set: {
-        accessToken: generatedTokens.accessToken,
-        refreshToken: generatedTokens.refreshToken,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      },
-    });
-
+  const generatedTokens = saveTokens(user.id, user.name);
   return generatedTokens;
 };
 
-export const logout = async (accessToken: string): Promise<void> => {
+export const logout = async (
+  accessToken: string
+): Promise<{ message: string }> => {
   const decoded = jwtDecode(accessToken);
   const { userId } = decoded as { userId: number };
 
   await db.delete(tokens).where(eq(tokens.userId, userId));
+
+  return { message: "로그아웃에 성공했습니다" };
 };
 
 export const refreshTokens = async (
@@ -97,7 +87,7 @@ export const refreshTokens = async (
   };
 
   if (exp * 1000 < Date.now()) {
-    throw new AuthException(401, "리프레시 토큰이 만료되었습니다", "JWT-001");
+    throw new Error(Errors.JWT.REFRESH_EXPIRED.code);
   }
 
   const [storedToken] = await db
@@ -106,11 +96,7 @@ export const refreshTokens = async (
     .where(eq(tokens.userId, userId));
 
   if (!storedToken || storedToken.refreshToken !== refreshToken) {
-    throw new AuthException(
-      401,
-      "유효하지 않은 리프레시 토큰입니다",
-      "JWT-002"
-    );
+    throw new Error(Errors.JWT.INVALID_REFRESH_TOKEN.code);
   }
 
   const newAccessToken = generateTokens(username, userId).accessToken;

@@ -1,7 +1,10 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
+
+// service
 import { register, login, logout, refreshTokens } from "./auth.service";
-import { HTTPException } from "hono/http-exception";
+
+// schema
 import {
   loginSchema,
   registerSchema,
@@ -10,7 +13,9 @@ import {
   type RegisterRequest,
   type RefreshRequest,
 } from "./auth.schema";
-import { AuthException } from "../../middleware/error.middleware";
+
+// 에러 처리
+import { Errors } from "../../constants/error";
 
 const app = new Hono();
 
@@ -32,9 +37,7 @@ app.post("/logout", async (c) => {
   const accessToken = c.req.header("Authorization")?.split(" ")[1];
 
   if (!accessToken) {
-    throw new HTTPException(401, {
-      message: "토큰이 존재하지 않습니다",
-    });
+    throw new Error(Errors.JWT.TOKEN_REQUIRED.code);
   }
 
   await logout(accessToken);
@@ -45,7 +48,7 @@ app.post("/refresh", zValidator("json", refreshSchema.request), async (c) => {
   const { refreshToken } = await c.req.json<RefreshRequest>();
 
   if (!refreshToken) {
-    throw new AuthException(401, "리프레시 토큰이 필요합니다", "JWT-002");
+    throw new Error(Errors.JWT.REFRESH_EXPIRED.code);
   }
 
   const tokens = await refreshTokens(refreshToken);

@@ -1,21 +1,5 @@
 import { z } from "zod";
 
-// 상수 정의
-export const ALLOWED_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-  "image/jpg",
-  "image/heic",
-  "image/heif",
-  "image/bmp",
-  "image/ico",
-] as const;
-
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-export const UPLOADS_DIR = "uploads";
-
 // 스키마 정의
 export const fileUploadSchema = z.object({
   file: z.instanceof(File),
