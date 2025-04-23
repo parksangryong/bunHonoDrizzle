@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { Errors } from "../constants/error";
+import { ZodError } from "zod";
 
 // 먼저 커스텀 에러 클래스를 생성합니다
 export class AuthException extends Error {
@@ -17,7 +18,18 @@ export class AuthException extends Error {
 export const errorHandler = (app: Hono) => {
   // 전역 에러 처리
   app.onError((err, c) => {
-    console.error(`${err}`);
+    console.error(err);
+    // Zod 에러 처리
+    if (err instanceof ZodError) {
+      return c.json(
+        {
+          code: "VALIDATION_ERROR",
+          message: "유효하지 않은 요청입니다",
+          issues: err.issues.map((issue) => issue.message),
+        },
+        400
+      );
+    }
 
     if (err instanceof AuthException) {
       return c.json(
