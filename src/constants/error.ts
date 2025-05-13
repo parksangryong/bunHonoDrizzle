@@ -18,37 +18,67 @@ export const Errors = {
     },
     CREATE_FAILED: {
       code: "AUTH-004",
-      status: 400,
+      status: 500,
       message: "유저 생성에 실패했습니다",
+    },
+    ADMIN_REQUIRED: {
+      code: "AUTH-005",
+      status: 403,
+      message: "관리자 권한이 필요합니다",
+    },
+    MENTO_REQUIRED: {
+      code: "AUTH-006",
+      status: 403,
+      message: "멘토 권한이 필요합니다",
+    },
+    STUDY_REQUIRED: {
+      code: "AUTH-007",
+      status: 403,
+      message: "교육생 권한이 필요합니다",
     },
   },
   USER: {
-    EMAIL_EXISTS: {
-      code: "USER-003",
-      status: 409,
-      message: "이미 존재하는 이메일입니다",
+    USER_NOT_FOUND: {
+      code: "USER-001",
+      status: 404,
+      message: "존재하지 않는 유저입니다",
     },
   },
   JWT: {
     ACCESS_EXPIRED: {
-      code: "JWT-001",
+      code: "JWT-002",
       status: 401,
       message: "액세스 토큰이 만료되었습니다",
     },
     REFRESH_EXPIRED: {
-      code: "JWT-002",
+      code: "JWT-001",
       status: 401,
       message: "리프레시 토큰이 만료되었습니다",
     },
     TOKEN_REQUIRED: {
-      code: "JWT-003",
+      code: "JWT-001",
       status: 401,
-      message: "인증 토큰이 필요합니다",
+      message: "토큰이 필요합니다",
     },
     INVALID_REFRESH_TOKEN: {
-      code: "JWT-004",
+      code: "JWT-001",
       status: 401,
       message: "유효하지 않은 리프레시 토큰입니다",
+    },
+    REFRESH_TOKEN_REQUIRED: {
+      code: "JWT-001",
+      status: 401,
+      message: "리프레시 토큰이 필요합니다",
+    },
+    INVALID_ACCESS_TOKEN: {
+      code: "JWT-001",
+      status: 401,
+      message: "유효하지 않은 액세스 토큰입니다",
+    },
+    DB_ERROR: {
+      code: "JWT-001",
+      status: 401,
+      message: "토큰이 저장되지 않았습니다",
     },
   },
   FILE: {
@@ -70,24 +100,19 @@ export const Errors = {
     FILE_SIZE_EXCEEDED: {
       code: "FILE-004",
       status: 400,
-      message: "파일 크기가 10MB를 초과합니다",
+      message: "파일 크기가 20MB를 초과합니다",
     },
     UPLOAD_FAILED: {
       code: "FILE-005",
       status: 400,
       message: "파일 업로드에 실패했습니다",
     },
-    INVALID_FILE: {
-      code: "FILE-006",
-      status: 400,
-      message: "파일이 없거나 올바른 형식이 아닙니다",
-    },
   },
   SERVER: {
     INTERNAL_ERROR: {
       code: "SERVER-001",
       status: 500,
-      message: "서버 에러가 발생했습니다",
+      message: "서버 오류가 발생했습니다",
     },
   },
 } as const;

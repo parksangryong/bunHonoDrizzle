@@ -17,6 +17,7 @@ import {
 // 에러 처리
 import { Errors } from "../../constants/error";
 import { ZodError } from "zod";
+import { getAccessToken } from "../../utils/jwt";
 
 const app = new Hono();
 
@@ -51,7 +52,15 @@ app.post(
 );
 
 app.post("/logout", async (c) => {
-  const accessToken = c.req.header("Authorization")?.split(" ")[1];
+  const authHeader = c.req.header("Authorization");
+
+  // Bearer 토큰 형식 검증
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new Error(Errors.JWT.TOKEN_REQUIRED.code);
+  }
+
+  // Bearer 제거하고 토큰만 추출
+  const accessToken = getAccessToken(authHeader);
 
   if (!accessToken) {
     throw new Error(Errors.JWT.TOKEN_REQUIRED.code);

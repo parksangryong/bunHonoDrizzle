@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@hono/zod-validator": "^0.4.3",
+    "crc": "^4.3.2",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.40.0",

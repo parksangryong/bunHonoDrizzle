@@ -19,7 +19,7 @@ export const createUser = async (
     .where(eq(users.email, email));
 
   if (existingUser.length > 0) {
-    throw new Error(Errors.USER.EMAIL_EXISTS.code);
+    throw new Error(Errors.USER.USER_NOT_FOUND.code);
   }
 
   return await db.insert(users).values({ name, age, email, password });

@@ -48,7 +48,7 @@ export const uploadFile: Handler = async (c: Context) => {
 
     // 파일 유효성 검사
     if (!fileData || !(fileData instanceof File)) {
-      throw new Error(Errors.FILE.INVALID_FILE.code);
+      throw new Error(Errors.FILE.FILE_NOT_FOUND.code);
     }
 
     const file = fileData as File;

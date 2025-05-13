@@ -11,3 +11,7 @@ export const formatDate = (date: string) => {
 export const formatTime = (date: string) => {
   return dayjs(date).format("HH:mm:ss");
 };
+
+export const koreaTime = () => {
+  return dayjs().add(9, "hour");
+};
