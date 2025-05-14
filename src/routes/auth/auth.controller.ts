@@ -81,7 +81,7 @@ app.post(
     const { refreshToken } = await c.req.json<RefreshRequest>();
 
     if (!refreshToken) {
-      throw new Error(Errors.JWT.REFRESH_EXPIRED.code);
+      throw new Error(Errors.JWT.REFRESH_TOKEN_REQUIRED.code);
     }
 
     const tokens = await refreshTokens(refreshToken);

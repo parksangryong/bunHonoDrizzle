@@ -7,11 +7,7 @@ const app = new Hono();
 
 app.get("/", async (c) => {
   const users = await getUsers();
-  return c.json({
-    success: true,
-    message: "유저 조회 성공",
-    data: users,
-  });
+  return c.json(users);
 });
 
 app.post(

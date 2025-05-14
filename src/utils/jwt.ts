@@ -1,5 +1,10 @@
 import { sign, verify } from "jsonwebtoken";
 
+import {
+  ACCESS_TOKEN_EXPIRATION_TIME,
+  REFRESH_TOKEN_EXPIRATION_TIME,
+} from "../constants/common";
+
 const ACCESS_TOKEN_SECRET =
   process.env.ACCESS_TOKEN_SECRET || "your-access-secret";
 const REFRESH_TOKEN_SECRET =
@@ -7,10 +12,10 @@ const REFRESH_TOKEN_SECRET =
 
 export const generateTokens = (name: string, userId: number) => {
   const accessToken = sign({ name, userId }, ACCESS_TOKEN_SECRET, {
-    expiresIn: "30m",
+    expiresIn: `${ACCESS_TOKEN_EXPIRATION_TIME}m`,
   });
   const refreshToken = sign({ name, userId }, REFRESH_TOKEN_SECRET, {
-    expiresIn: "14d",
+    expiresIn: `${REFRESH_TOKEN_EXPIRATION_TIME}d`,
   });
 
   return { accessToken, refreshToken };

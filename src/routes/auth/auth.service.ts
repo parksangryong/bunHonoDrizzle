@@ -1,9 +1,9 @@
 import { db } from "../../db";
 import { users, tokens } from "../../db/schema";
 import { eq } from "drizzle-orm";
-
+import { redis } from "../../middleware/redis.middleware";
 // utils
-import { generateTokens } from "../../utils/jwt";
+import { generateTokens, verifyRefreshToken } from "../../utils/jwt";
 import {
   comparePassword,
   hashPassword,
@@ -16,6 +16,7 @@ import type { LoginRequest, RegisterRequest } from "./auth.schema";
 
 // constants
 import { Errors } from "../../constants/error";
+import { ACCESS_TOKEN_EXPIRATION_TIME } from "../../constants/common";
 
 interface TokenPair {
   accessToken: string;
@@ -69,7 +70,8 @@ export const logout = async (
   const decoded = jwtDecode(accessToken);
   const { userId } = decoded as { userId: number };
 
-  await db.delete(tokens).where(eq(tokens.userId, userId));
+  await redis.del(`access_token:${userId}`);
+  await redis.del(`refresh_token:${userId}`);
 
   return { message: "로그아웃에 성공했습니다" };
 };
@@ -77,38 +79,35 @@ export const logout = async (
 export const refreshTokens = async (
   refreshToken: string
 ): Promise<TokenPair> => {
-  const decoded = jwtDecode(refreshToken);
-  const { userId, name, exp } = decoded as {
+  const decoded = verifyRefreshToken(refreshToken) as {
     userId: number;
     name: string;
-    exp: number;
   };
 
-  if (!userId || !name) {
-    throw new Error(Errors.JWT.INVALID_REFRESH_TOKEN.code);
-  }
-
-  if (exp * 1000 < Date.now()) {
+  if (!decoded) {
     throw new Error(Errors.JWT.REFRESH_EXPIRED.code);
   }
 
-  const [storedToken] = await db
-    .select()
-    .from(tokens)
-    .where(eq(tokens.userId, userId));
+  const storedToken = await redis.get(`refresh_token:${decoded.userId}`);
 
-  if (!storedToken || storedToken.refreshToken !== refreshToken) {
+  if (!storedToken) {
     throw new Error(Errors.JWT.INVALID_REFRESH_TOKEN.code);
   }
 
-  const newAccessToken = generateTokens(name, userId).accessToken;
+  // Redis에 저장된 토큰은 JSON.stringify로 저장되어 있으므로 파싱
+  const storedTokenData = JSON.parse(storedToken);
+  if (storedTokenData !== refreshToken) {
+    throw new Error(Errors.JWT.INVALID_REFRESH_TOKEN.code);
+  }
 
-  await db
-    .update(tokens)
-    .set({
-      accessToken: newAccessToken,
-    })
-    .where(eq(tokens.userId, userId));
+  const newAccessToken = generateTokens(
+    decoded.name,
+    decoded.userId
+  ).accessToken;
+
+  await redis.set(`access_token:${decoded.userId}`, newAccessToken, {
+    EX: ACCESS_TOKEN_EXPIRATION_TIME * 60,
+  });
 
   return {
     accessToken: newAccessToken,

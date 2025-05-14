@@ -11,6 +11,7 @@ import { connectionResult } from "./db";
 import { errorHandler } from "./middleware/error.middleware";
 import { authenticateToken } from "./middleware/auth.middleware";
 import { rateLimit } from "./middleware/rateLimit.middleware";
+import { redisMiddleware, initRedis } from "./middleware/redis.middleware";
 
 //routes
 import users from "./routes/user/user.controller";
@@ -24,6 +25,7 @@ app.use("*", cors()); // CORS 활성화
 app.use("*", logger()); // morgan과 유사한 로깅
 app.use("*", timing()); // response time 측정
 app.use("*", rateLimit()); // 요청 제한
+app.use("*", redisMiddleware); // Redis 미들웨어
 app.use(
   "/uploads/*",
   serveStatic({
@@ -49,6 +51,12 @@ app.route("/users", users);
 app.route("/files", files);
 
 const PORT = process.env.PORT || 3000;
+
+const init = async () => {
+  await initRedis();
+};
+
+init();
 
 export default {
   port: Number(PORT),

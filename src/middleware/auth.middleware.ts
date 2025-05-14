@@ -7,13 +7,9 @@ import {
   verifyRefreshToken,
 } from "../utils/jwt";
 
-// db
-import { db } from "../db";
-import { tokens } from "../db/schema";
-import { eq } from "drizzle-orm";
-
 // constants
 import { Errors } from "../constants/error";
+import { redis } from "./redis.middleware";
 
 interface JwtPayload {
   name: string;
@@ -28,38 +24,24 @@ export const authenticateToken = async (c: Context, next: Next) => {
   }
 
   const accessToken = getAccessToken(authHeader);
-
   const decoded = verifyAccessToken(accessToken) as JwtPayload;
 
   if (!decoded) {
     throw new Error(Errors.JWT.ACCESS_EXPIRED.code);
   }
 
-  const getTokenData = await db
-    .select({
-      refreshToken: tokens.refreshToken,
-    })
-    .from(tokens)
-    .where(eq(tokens.accessToken, accessToken));
+  const refreshToken = await redis.get(`refresh_token:${decoded.userId}`);
 
-  if (!getTokenData) {
-    throw new Error(Errors.JWT.ACCESS_EXPIRED.code);
+  if (!refreshToken) {
+    throw new Error(Errors.JWT.INVALID_REFRESH_TOKEN.code);
   }
 
-  const refreshDecoded = verifyRefreshToken(getTokenData[0].refreshToken);
+  const storedTokenData = JSON.parse(refreshToken);
+  const decoded_refreshToken = verifyRefreshToken(storedTokenData);
 
-  console.log("ACCESS_TOKEN_SECRET:", decoded);
-  console.log("REFRESH_TOKEN_DECODED:", refreshDecoded);
-
-  if (!decoded && !refreshDecoded) {
+  if (!decoded_refreshToken) {
     throw new Error(Errors.JWT.REFRESH_EXPIRED.code);
   }
 
-  try {
-    await db.select().from(tokens).where(eq(tokens.userId, decoded.userId));
-    c.set("user", decoded);
-    await next();
-  } catch (error) {
-    throw new Error(Errors.JWT.DB_ERROR.code);
-  }
+  await next();
 };
