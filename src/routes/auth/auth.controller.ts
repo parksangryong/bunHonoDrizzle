@@ -18,7 +18,6 @@ import {
 import { Errors } from "../../constants/error";
 import { ZodError } from "zod";
 import { getAccessToken } from "../../utils/jwt";
-
 const app = new Hono();
 
 app.post(
@@ -53,9 +52,10 @@ app.post(
 
 app.post("/logout", async (c) => {
   const authHeader = c.req.header("Authorization");
+  const deviceId = c.req.header("x-device-id");
 
   // Bearer 토큰 형식 검증
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader || !authHeader.startsWith("Bearer ") || !deviceId) {
     throw new Error(Errors.JWT.TOKEN_REQUIRED.code);
   }
 
@@ -66,7 +66,7 @@ app.post("/logout", async (c) => {
     throw new Error(Errors.JWT.TOKEN_REQUIRED.code);
   }
 
-  await logout(accessToken);
+  await logout(accessToken, deviceId);
   return c.json({ message: "로그아웃에 성공했습니다" }, 200);
 });
 
@@ -78,13 +78,22 @@ app.post(
     }
   }),
   async (c) => {
-    const { refreshToken } = await c.req.json<RefreshRequest>();
+    const authHeader = c.req.header("Authorization");
+    const deviceId = c.req.header("x-device-id");
 
-    if (!refreshToken) {
-      throw new Error(Errors.JWT.REFRESH_TOKEN_REQUIRED.code);
+    // Bearer 토큰 형식 검증
+    if (!authHeader || !authHeader.startsWith("Bearer ") || !deviceId) {
+      throw new Error(Errors.JWT.TOKEN_REQUIRED.code);
     }
 
-    const tokens = await refreshTokens(refreshToken);
+    // Bearer 제거하고 토큰만 추출
+    const refreshToken = getAccessToken(authHeader);
+
+    if (!refreshToken) {
+      throw new Error(Errors.JWT.TOKEN_REQUIRED.code);
+    }
+
+    const tokens = await refreshTokens(refreshToken, deviceId);
     return c.json(tokens, 201);
   }
 );

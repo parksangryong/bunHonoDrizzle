@@ -1,7 +1,7 @@
 import { db } from "../../db";
 import { users, tokens } from "../../db/schema";
 import { eq } from "drizzle-orm";
-import { redis } from "../../middleware/redis.middleware";
+
 // utils
 import { generateTokens, verifyRefreshToken } from "../../utils/jwt";
 import {
@@ -16,6 +16,7 @@ import type { LoginRequest, RegisterRequest } from "./auth.schema";
 
 // constants
 import { Errors } from "../../constants/error";
+import { redis } from "../../middleware/redis.middleware";
 import { ACCESS_TOKEN_EXPIRATION_TIME } from "../../constants/common";
 
 interface TokenPair {
@@ -28,6 +29,9 @@ export const register = async ({
   name,
   email,
   age,
+  deviceId,
+  fcmToken,
+  authCode,
 }: RegisterRequest): Promise<TokenPair> => {
   const existingUser = await db
     .select()
@@ -44,12 +48,20 @@ export const register = async ({
     .insert(users)
     .values({ password: hashedPassword, name, email, age });
 
-  return await saveTokens(insertId, name);
+  return await saveTokens({
+    userId: insertId,
+    name,
+    authCode,
+    deviceId,
+  });
 };
 
 export const login = async ({
   email,
   password,
+  deviceId,
+  fcmToken,
+  authCode,
 }: LoginRequest): Promise<TokenPair> => {
   const [user] = await db.select().from(users).where(eq(users.email, email));
   if (!user) {
@@ -61,34 +73,44 @@ export const login = async ({
     throw new Error(Errors.AUTH.PASSWORD_NOT_MATCH.code);
   }
 
-  return await saveTokens(user.id, user.name);
+  return await saveTokens({
+    userId: user.id,
+    name: user.name,
+    authCode,
+    deviceId,
+  });
 };
 
 export const logout = async (
-  accessToken: string
+  accessToken: string,
+  deviceId: string
 ): Promise<{ message: string }> => {
   const decoded = jwtDecode(accessToken);
   const { userId } = decoded as { userId: number };
 
-  await redis.del(`access_token:${userId}`);
-  await redis.del(`refresh_token:${userId}`);
+  await redis.del(`access_token:${userId}:${deviceId}`);
+  await redis.del(`refresh_token:${userId}:${deviceId}`);
 
   return { message: "로그아웃에 성공했습니다" };
 };
 
 export const refreshTokens = async (
-  refreshToken: string
+  refreshToken: string,
+  deviceId: string
 ): Promise<TokenPair> => {
   const decoded = verifyRefreshToken(refreshToken) as {
     userId: number;
     name: string;
+    authCode: number;
   };
 
   if (!decoded) {
     throw new Error(Errors.JWT.REFRESH_EXPIRED.code);
   }
 
-  const storedToken = await redis.get(`refresh_token:${decoded.userId}`);
+  const storedToken = await redis.get(
+    `refresh_token:${decoded.userId}:${deviceId}`
+  );
 
   if (!storedToken) {
     throw new Error(Errors.JWT.INVALID_REFRESH_TOKEN.code);
@@ -102,12 +124,17 @@ export const refreshTokens = async (
 
   const newAccessToken = generateTokens(
     decoded.name,
-    decoded.userId
+    decoded.userId,
+    decoded.authCode
   ).accessToken;
 
-  await redis.set(`access_token:${decoded.userId}`, newAccessToken, {
-    EX: ACCESS_TOKEN_EXPIRATION_TIME * 60,
-  });
+  await redis.set(
+    `access_token:${decoded.userId}:${deviceId}`,
+    newAccessToken,
+    {
+      EX: ACCESS_TOKEN_EXPIRATION_TIME * 60,
+    }
+  );
 
   return {
     accessToken: newAccessToken,

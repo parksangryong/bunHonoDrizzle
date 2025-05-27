@@ -43,6 +43,11 @@ export const Errors = {
       status: 404,
       message: "존재하지 않는 유저입니다",
     },
+    USER_BLOCKED: {
+      code: "USER-003",
+      status: 403,
+      message: "유저가 차단되었습니다",
+    },
   },
   JWT: {
     ACCESS_EXPIRED: {
@@ -113,6 +118,18 @@ export const Errors = {
       code: "SERVER-001",
       status: 500,
       message: "서버 오류가 발생했습니다",
+    },
+  },
+  PAGINATION: {
+    INVALID_PAGE: {
+      code: "PAGINATION-001",
+      status: 400,
+      message: "페이지 번호가 유효하지 않습니다",
+    },
+    INVALID_LIMIT: {
+      code: "PAGINATION-002",
+      status: 400,
+      message: "페이지 크기가 유효하지 않습니다",
     },
   },
 } as const;
